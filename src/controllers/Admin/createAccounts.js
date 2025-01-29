@@ -12,7 +12,7 @@ export const bulkCreateAdmins = async (req, res) => {
       const hashedAdmins = await Promise.all(
         admins.map(async (admin) => {
           const hashedPassword = await bcrypt.hash('defaultPassword123', 10);
-          return { ...admin, password: hashedPassword };
+          return { ...admin, password: hashedPassword, role: 'admin' };
         })
       );
   
