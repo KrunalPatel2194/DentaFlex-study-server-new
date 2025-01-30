@@ -13,12 +13,23 @@ import subTopicRoutes from './routes/subTopic.routes.js';
 import studyRoutes from './routes/study.routes.js';
 import subscriptionRoutes from './routes/subscriptions.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-const app = express();
+import adminMainRoutes from './routes/admin-main.routes.js';
 
+const app = express();
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3050', // Add your second allowed domain here
+];
 // Middleware
 app.use(
   cors({
-    origin: 'http://localhost:3000', // Remove trailing slash
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true, // Allow cookies or credentials
@@ -53,6 +64,7 @@ app.use('/api/', subTopicRoutes);
 app.use('/api/study', studyRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/admin',adminRoutes);
+app.use('/api/admin-main', adminMainRoutes)
 // router.put('/save-preference', profileController.saveExamPreference);
 // Error handling
 app.use(errorHandler);
