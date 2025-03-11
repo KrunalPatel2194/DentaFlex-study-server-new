@@ -70,13 +70,17 @@ app.use('/api/admin-main', adminMainRoutes)
 app.use(errorHandler);
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://nidhipatel10997:Krudell2026@dentaflex.orfzr.mongodb.net/')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect('mongodb://localhost:27017/test', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000 // Reduce timeout for faster failure detection
+})
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
-const PORT =  5000;
+const PORT =  5050;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server running on http://0.0.0.0:5000');
+  console.log('Server running on http://0.0.0.0:5050');
 });
 
 export default app;

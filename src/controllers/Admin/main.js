@@ -5,6 +5,9 @@ import Subject from '../../models/subject.model.js';
 import Topic from '../../models/topic.model.js';
 import Subtopic from '../../models/subTopic.model.js';
 import FieldOfStudy from '../../models/fieldOfStudy.model.js';
+import ContentAudit from '../../models/contentAudit.model.js';
+import { generateContent } from '../../utils/openai-content-generator.js';
+import { parseAndUpdateContent } from '../../utils/contentParser.js';
 
 // Field of Study Operations
 export const createFieldOfStudy = async (req, res, next) => {
@@ -122,8 +125,8 @@ export const getAllExams = async (req, res, next) => {
   
   // Update exam
   export const updateExam = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // const session = await mongoose.startSession();
+    // //session.startTransaction();
   
     try {
       const { id } = req.params;
@@ -143,31 +146,32 @@ export const getAllExams = async (req, res, next) => {
           description,
           fieldOfStudy: fieldOfStudyId,
         },
-        { new: true, session }
+        { new: true }
       ).populate('fieldOfStudy', 'name');
   
       if (!updatedExam) {
         throw new Error('Exam not found');
       }
   
-      await session.commitTransaction();
+      // //await session.commitTransaction();
   
       res.json({
         success: true,
         exam: updatedExam
       });
     } catch (error) {
-      await session.abortTransaction();
+      // //await session.abortTransaction();
       next(error);
     } finally {
-      session.endSession();
+      // session.endSession();
+
     }
   };
   
   // Delete exam and all related content
   export const deleteExam = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // const session = await mongoose.startSession();
+    //session.startTransaction();
   
     try {
       const { id } = req.params;
@@ -188,30 +192,30 @@ export const getAllExams = async (req, res, next) => {
         
         for (const topic of topics) {
           // Delete all subtopics for each topic
-          await Subtopic.deleteMany({ topic: topic._id }, { session });
+          await Subtopic.deleteMany({ topic: topic._id }, {  });
         }
         
         // Delete all topics for this subject
-        await Topic.deleteMany({ _id: { $in: subject.topics } }, { session });
+        await Topic.deleteMany({ _id: { $in: subject.topics } }, {  });
       }
       
       // Delete all subjects for this exam
-      await Subject.deleteMany({ exam: id }, { session });
+      await Subject.deleteMany({ exam: id }, {  });
       
       // Finally delete the exam
-      await Exam.findByIdAndDelete(id, { session });
+      await Exam.findByIdAndDelete(id, {  });
   
-      await session.commitTransaction();
+      //await session.commitTransaction();
   
       res.json({
         success: true,
         message: 'Exam and all related content deleted successfully'
       });
     } catch (error) {
-      await session.abortTransaction();
+      //await session.abortTransaction();
       next(error);
     } finally {
-      session.endSession();
+      // session.endSession();
     }
   };
 // Get exam with all its subjects and their topics
@@ -250,7 +254,7 @@ export const getExamWithContent = async (req, res, next) => {
 // Subject Operations
 export const createSubject = async (req, res, next) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
+  //session.startTransaction();
   
   try {
     const { examId, data } = req.body;
@@ -282,14 +286,14 @@ export const createSubject = async (req, res, next) => {
       { session }
     );
     
-    await session.commitTransaction();
+    //await session.commitTransaction();
     
     res.status(201).json({
       success: true,
       subject
     });
   } catch (error) {
-    await session.abortTransaction();
+    //await session.abortTransaction();
     next(error);
   } finally {
     session.endSession();
@@ -340,7 +344,7 @@ export const getAllSubjects = async (req, res, next) => {
   
   export const updateSubject = async (req, res, next) => {
     const session = await mongoose.startSession();
-    session.startTransaction();
+    //session.startTransaction();
   
     try {
       const { name, description, content, isPublic } = req.body;
@@ -356,13 +360,13 @@ export const getAllSubjects = async (req, res, next) => {
         throw new Error('Subject not found');
       }
   
-      await session.commitTransaction();
+      //await session.commitTransaction();
       res.json({
         success: true,
         data: subject
       });
     } catch (error) {
-      await session.abortTransaction();
+      //await session.abortTransaction();
       next(error);
     } finally {
       session.endSession();
@@ -371,7 +375,7 @@ export const getAllSubjects = async (req, res, next) => {
   
   export const deleteSubject = async (req, res, next) => {
     const session = await mongoose.startSession();
-    session.startTransaction();
+    //session.startTransaction();
   
     try {
       const { id } = req.params;
@@ -396,14 +400,14 @@ export const getAllSubjects = async (req, res, next) => {
       );
   
       await Subject.findByIdAndDelete(id, { session });
-      await session.commitTransaction();
+      //await session.commitTransaction();
   
       res.json({
         success: true,
         message: 'Subject and related content deleted successfully'
       });
     } catch (error) {
-      await session.abortTransaction();
+      //await session.abortTransaction();
       next(error);
     } finally {
       session.endSession();
@@ -417,7 +421,7 @@ export const getAllSubjects = async (req, res, next) => {
 // Create Topic
 export const createTopic = async (req, res, next) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
+  //session.startTransaction();
   
   try {
     const { subjectId, data } = req.body;
@@ -440,7 +444,7 @@ export const createTopic = async (req, res, next) => {
       { session }
     );
     
-    await session.commitTransaction();
+    //await session.commitTransaction();
     
     const result = {
       ...topic.toObject(),
@@ -456,7 +460,7 @@ export const createTopic = async (req, res, next) => {
       topic: result
     });
   } catch (error) {
-    await session.abortTransaction();
+    //await session.abortTransaction();
     next(error);
   } finally {
     session.endSession();
@@ -567,7 +571,7 @@ export const getTopicById = async (req, res, next) => {
 // Update Topic
 export const updateTopic = async (req, res, next) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
+  //session.startTransaction();
 
   try {
     const { id } = req.params;
@@ -615,7 +619,7 @@ export const updateTopic = async (req, res, next) => {
       );
     }
 
-    await session.commitTransaction();
+    //await session.commitTransaction();
 
     const result = {
       ...updatedTopic.toObject(),
@@ -633,7 +637,7 @@ export const updateTopic = async (req, res, next) => {
       topic: result
     });
   } catch (error) {
-    await session.abortTransaction();
+    //await session.abortTransaction();
     next(error);
   } finally {
     session.endSession();
@@ -643,7 +647,7 @@ export const updateTopic = async (req, res, next) => {
 // Delete Topic
 export const deleteTopic = async (req, res, next) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
+  //session.startTransaction();
 
   try {
     const { id } = req.params;
@@ -669,14 +673,14 @@ export const deleteTopic = async (req, res, next) => {
     // Delete the topic
     await Topic.findByIdAndDelete(id, { session });
 
-    await session.commitTransaction();
+    //await session.commitTransaction();
 
     res.json({
       success: true,
       message: 'Topic and all related content deleted successfully'
     });
   } catch (error) {
-    await session.abortTransaction();
+    //await session.abortTransaction();
     next(error);
   } finally {
     session.endSession();
@@ -780,7 +784,7 @@ export const getAllSubtopics = async (req, res, next) => {
    
    export const createSubtopic = async (req, res, next) => {
     const session = await mongoose.startSession();
-    session.startTransaction();
+    //session.startTransaction();
    
     try {
       const { topicId, data } = req.body;
@@ -809,7 +813,7 @@ export const getAllSubtopics = async (req, res, next) => {
         { session }
       );
    
-      await session.commitTransaction();
+      //await session.commitTransaction();
    
       const result = {
         ...subtopic.toObject(),
@@ -830,7 +834,7 @@ export const getAllSubtopics = async (req, res, next) => {
       });
    
     } catch (error) {
-      await session.abortTransaction();
+      //await session.abortTransaction();
       next(error);
     } finally {
       session.endSession();
@@ -839,7 +843,7 @@ export const getAllSubtopics = async (req, res, next) => {
    
    export const updateSubtopic = async (req, res, next) => {
     const session = await mongoose.startSession();
-    session.startTransaction();
+    //session.startTransaction();
    
     try {
       const { id } = req.params;
@@ -896,7 +900,7 @@ export const getAllSubtopics = async (req, res, next) => {
         }
       };
    
-      await session.commitTransaction();
+      //await session.commitTransaction();
    
       res.json({
         success: true,
@@ -904,7 +908,7 @@ export const getAllSubtopics = async (req, res, next) => {
       });
    
     } catch (error) {
-      await session.abortTransaction();
+      //await session.abortTransaction();
       next(error);
     } finally {
       session.endSession();
@@ -913,7 +917,7 @@ export const getAllSubtopics = async (req, res, next) => {
    
    export const deleteSubtopic = async (req, res, next) => {
     const session = await mongoose.startSession();
-    session.startTransaction();
+    //session.startTransaction();
    
     try {
       const { id } = req.params;
@@ -932,7 +936,7 @@ export const getAllSubtopics = async (req, res, next) => {
    
       await Subtopic.findByIdAndDelete(id, { session });
    
-      await session.commitTransaction();
+      //await session.commitTransaction();
    
       res.json({
         success: true,
@@ -940,7 +944,7 @@ export const getAllSubtopics = async (req, res, next) => {
       });
    
     } catch (error) {
-      await session.abortTransaction();
+      //await session.abortTransaction();
       next(error);
     } finally {
       session.endSession();
@@ -987,7 +991,7 @@ export const getAllSubtopics = async (req, res, next) => {
 // Batch creation operations
 export const createSubjectWithTopicsAndSubtopics = async (req, res, next) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
+  //session.startTransaction();
   
   try {
     const { examId, subjectData, topics } = req.body;
@@ -1061,7 +1065,7 @@ export const createSubjectWithTopicsAndSubtopics = async (req, res, next) => {
       { session }
     );
     
-    await session.commitTransaction();
+    //await session.commitTransaction();
 
     // Fetch the complete subject with populated topics and subtopics
     const populatedSubject = await Subject.findById(subject[0]._id)
@@ -1077,7 +1081,7 @@ export const createSubjectWithTopicsAndSubtopics = async (req, res, next) => {
       subject: populatedSubject
     });
   } catch (error) {
-    await session.abortTransaction();
+    //await session.abortTransaction();
     next(error);
   } finally {
     session.endSession();
@@ -1086,7 +1090,7 @@ export const createSubjectWithTopicsAndSubtopics = async (req, res, next) => {
 
 export const createTopicWithSubtopics = async (req, res, next) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
+  //session.startTransaction();
   
   try {
     const { subjectId, topicData, subtopics } = req.body;
@@ -1125,16 +1129,110 @@ export const createTopicWithSubtopics = async (req, res, next) => {
       { session }
     );
     
-    await session.commitTransaction();
+    //await session.commitTransaction();
     
     res.status(201).json({
       success: true,
       topic: topic[0]
     });
   } catch (error) {
-    await session.abortTransaction();
+    //await session.abortTransaction();
     next(error);
   } finally {
     session.endSession();
+  }
+};
+
+export const createAuditEntry = async (req, res, next) => {
+  try {
+    const { type, content } = req.body;
+    const userId = '67ae656589aab1ab787e67b8';
+
+    const auditEntry = new ContentAudit({
+      type,
+      content,
+      userId,
+      status: 'in_progress'
+    });
+
+    await auditEntry.save();
+
+    if (type === 'generate') {
+      try {
+        const aiResponse = await generateContent(content);
+        const updatedAudit = await ContentAudit.findByIdAndUpdate(
+          auditEntry._id,
+          {
+            aiResponse,
+            status: 'completed',
+            completedAt: new Date()
+          },
+          { new: true }
+        );
+
+        // Parse and update content immediately after AI response
+        // await parseAndUpdateContent(updatedAudit._id);
+      } catch (error) {
+        await ContentAudit.findByIdAndUpdate(auditEntry._id, {
+          status: 'failed',
+          error: error.message
+        });
+        throw error;
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: type === 'generate' ? 'Content generation started' : 'Content submitted',
+      auditId: auditEntry._id
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAuditEntries = async (req, res, next) => {
+  try {
+    const entries = await ContentAudit.find({ userId: '67972478bb2d9e30aa9b3e26' })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name email');
+
+    res.json({
+      success: true,
+      data: entries
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const updateContentAuditController = async (req, res, next) => {
+  try {
+    const { auditId } = req.params;
+    console.log(auditId,"auditId")
+    await parseAndUpdateContent(auditId);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAuditEntry = async (req, res, next) => {
+  try {
+    const entry = await ContentAudit.findById(req.params.id)
+      .populate('userId', 'name email');
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'Audit entry not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: entry
+    });
+  } catch (error) {
+    next(error);
   }
 };

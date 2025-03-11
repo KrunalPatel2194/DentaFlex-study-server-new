@@ -2,7 +2,7 @@
 import express from 'express';
 import { adminAuth } from '../middleware/adminAuth.js';
 import * as adminController from '../controllers/Admin/main.js';
-
+import { generateExam, getGeneratedExams } from '../controllers/Admin/generateQuestionsController.js';
 const router = express.Router();
 
 // Apply adminAuth middleware to all routes
@@ -51,6 +51,15 @@ router.post('/topics/batch', adminController.createTopicWithSubtopics);
 // Subtopic Routes
 // router.post('/subtopics', adminController.createSubtopic);
 
+
+//Content Audit Entries
+router.post('/content-audit', adminController.createAuditEntry);
+router.get('/content-audit', adminController.getAuditEntries);
+router.get('/content-audit/:id', adminController.getAuditEntry);
+router.post('/content-audit/:auditId/parse', adminController.updateContentAuditController);
+
+router.post('/generated-exams', getGeneratedExams);
+router.post('/generate-exam', generateExam);
 export default router;
 
 // In your main app.js or index.js
