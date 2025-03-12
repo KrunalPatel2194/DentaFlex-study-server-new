@@ -34,24 +34,22 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true, // Allow cookies and authorization headers
-  preflightContinue: false,
-  optionsSuccessStatus: 204
 };
 
 // Apply CORS middleware
-app.use(cors(corsOptions));
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
+app.options("*",cors(corsOptions));
+// app.use((req, res, next) => {
+//   res.header("Access-Control-Allow-Origin", req.headers.origin);
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//   res.header("Access-Control-Allow-Credentials", "true");
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
+//   if (req.method === "OPTIONS") {
+//     return res.sendStatus(204);
+//   }
 
-  next();
-});
+//   next();
+// });
 // Then parse JSON bodies
 app.use(express.json());
 
