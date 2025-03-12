@@ -17,6 +17,7 @@ import adminMainRoutes from './routes/admin-main.routes.js';
 
 const app = express();
 const allowedOrigins = [
+  'https://dentaflex-study-admin-portal.vercel.app/',
   'http://localhost:3000',
   'http://localhost:3050', // Add your second allowed domain here
 ];
