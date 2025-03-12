@@ -17,11 +17,12 @@ import adminMainRoutes from './routes/admin-main.routes.js';
 
 const app = express();
 const allowedOrigins = [
-  'https://dentaflex-study-admin-portal.vercel.app/',
+  'https://dentaflex-study-admin-portal.vercel.app',
   'https://dentaflex-study-app.vercel.app',
   'http://localhost:3000',
-  'http://localhost:3050', // Add your second allowed domain here
+  'http://localhost:3050'
 ];
+
 // Middleware
 const corsOptions = {
   origin: function (origin, callback) {
@@ -36,24 +37,27 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 204
 };
+
 app.use(cors(corsOptions));
-app.options('/study/tests/results', cors());
 app.use(express.json());
 
+// Set CORS headers for all routes
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
 
-
-// app.use((req, res, next) => {
-//   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-//   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-//   next();
-// });
-// app.use((req, res, next) => {
-//   console.log('Method:', req.method);
-//   console.log('URL:', req.url);
-//   console.log('Headers:', req.headers);
-//   console.log('Body:', req.body); // This will show the parsed body
-//   next();
-// });
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
@@ -65,9 +69,9 @@ app.use('/api', topicsRoutes);
 app.use('/api/', subTopicRoutes);
 app.use('/api/study', studyRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
-app.use('/api/admin',adminRoutes);
-app.use('/api/admin-main', adminMainRoutes)
-// router.put('/save-preference', profileController.saveExamPreference);
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin-main', adminMainRoutes);
+
 // Error handling
 app.use(errorHandler);
 
@@ -75,12 +79,12 @@ app.use(errorHandler);
 mongoose.connect('mongodb://localhost:27017/test', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000 // Reduce timeout for faster failure detection
+  serverSelectionTimeoutMS: 5000
 })
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-const PORT =  5050;
+const PORT = 5050;
 app.listen(PORT, '0.0.0.0', () => {
   console.log('Server running on http://0.0.0.0:5050');
 });
