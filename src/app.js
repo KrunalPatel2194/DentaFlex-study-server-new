@@ -4,7 +4,7 @@ import cors from 'cors';
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import { errorHandler } from './middleware/error.js';
-import fieldOfStudyRoutes  from './routes/fieldOfStudy.routes.js';
+import fieldOfStudyRoutes from './routes/fieldOfStudy.routes.js';
 import testsRoutes from './routes/tests.routes.js';
 import examRoutes from './routes/exam.routes.js';
 import subjectRoutes from './routes/subject.routes.js';
@@ -14,49 +14,15 @@ import studyRoutes from './routes/study.routes.js';
 import subscriptionRoutes from './routes/subscriptions.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import adminMainRoutes from './routes/admin-main.routes.js';
+import { corsMiddleware } from './cors.js';
 
 const app = express();
-const allowedOrigins = [
-  'https://dentaflex-study-admin-portal.vercel.app',
-  'https://dentaflex-study-app.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:3050'
-];
 
-// Middleware
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 204
-};
+// Apply CORS middleware first
+app.use(corsMiddleware);
 
-app.use(cors(corsOptions));
+// Then parse JSON bodies
 app.use(express.json());
-
-// Set CORS headers for all routes
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
-  
-  next();
-});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -84,9 +50,9 @@ mongoose.connect('mongodb://localhost:27017/test', {
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-const PORT = 5050;
+const PORT = process.env.PORT || 5050;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server running on http://0.0.0.0:5050');
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
 
 export default app;
