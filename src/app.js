@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import { errorHandler } from './middleware/error.js';
@@ -17,10 +18,40 @@ import adminMainRoutes from './routes/admin-main.routes.js';
 import { corsMiddleware } from './cors.js';
 
 const app = express();
+const allowedOrigins = [
+  "https://dentaflex-study-app.vercel.app",
+  "http://localhost:3000", // For local testing
+  "http://localhost:3050"
+];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // Allow cookies and authorization headers
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
 
-// Apply CORS middleware first
-app.use(corsMiddleware);
+// Apply CORS middleware
+app.use(cors(corsOptions));
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
 
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 // Then parse JSON bodies
 app.use(express.json());
 
